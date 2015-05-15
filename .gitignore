@@ -19,9 +19,7 @@ doc/*
 ### Libraries ###
 !coffeequate/src/vendor/**/*.js
 
-### Tests ###
-# This is temporary, while these are outdated.
-coffeequate/tests/*
+tests/vendor/jasmine/
 
 ### Workspace ###
 progress/*
