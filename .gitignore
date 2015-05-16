@@ -19,7 +19,8 @@ doc/*
 ### Libraries ###
 !coffeequate/src/vendor/**/*.js
 
-tests/vendor/jasmine/
+tests/vendor/*
+!tests/spec/*.js
 
 ### Workspace ###
 progress/*
