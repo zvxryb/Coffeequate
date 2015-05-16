@@ -164,5 +164,7 @@ define ["parse", "nodes"], (parse, nodes) ->
 			rhs = other.expr.expandAndSimplify()
 
 			return lhs.equals(rhs)
+		
+		approx: -> @expr.approx()
 
 	return Expression
