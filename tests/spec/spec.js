@@ -16,7 +16,6 @@ describe('Pythagoras', function () {
 	var eq = CQ('a**2 + b**2 = c**2');
 	it('solve a', function () {
 		var actual   = eq.solve('a')[0];
-		alert(actual.toString());
 		var expected = CQ('(c**2 - b**2)**(1/2)');
 		expect(actual).toEqual(expected);
 	});
