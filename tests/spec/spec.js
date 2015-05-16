@@ -1,11 +1,9 @@
 var exprEq = function (a, b) {
-	if (typeof a.expr === 'object' && typeof b.expr === 'object') {
-		var ab = a.expr.equals(b.expr);
-		var ba = b.expr.equals(a.expr);
-		if (ab != ba)
-			throw null;
-		return ab && ba;
-	}
+	if (typeof a.equals === 'function')
+		return a.equals(b);
+
+	if (typeof b.equals === 'function')
+		return b.equals(a);
 };
 
 var exprMatch = {
