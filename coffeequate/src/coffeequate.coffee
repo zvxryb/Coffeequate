@@ -1,7 +1,8 @@
 ### Coffeequate - http://github.com/MatthewJA/Coffeequate ###
 
-require.config
+require?.config?(
 		baseUrl: "./"
+)
 
 define ["operators", "Expression", "parse", "uncertainties", "terminals"], (operators, Expression, parse, uncertainties, terminals) ->
 
