@@ -25,6 +25,8 @@ define [
     # Node in the expression tree representing multiplication.
     class Mul extends nodes.RoseNode
 
+        @cmp = -2
+
         # Make a new multiplication node.
         # Arguments passed as children will be parsed as children from whatever type they are.
         #
@@ -34,10 +36,67 @@ define [
             if args.length < 1
                 throw new Error("Mul nodes must have at least one child.")
 
-            @cmp = -2
+            @cmp = Mul.cmp
 
             args = parseArgs(args...)
             super("*", args)
+
+        # Collect like terms, respecting canonicalization rules
+        #
+        # @param terms... [Array<Object>] A list of expressions in canonical form to be collected
+        # @return [Object] Result of multiplication
+        @collect: (terms...) ->
+            Add = require('operators/Add')
+            Pow = require('operators/Pow')
+            constant = new terminals.Constant(1)
+            variable = []
+            for term0 in terms
+                throw new Error("non-canonical hierarchy") if term0.cmp >= Mul.cmp
+                if term0 instanceof terminals.Constant
+                    constant = constant.mul(term0)
+                    continue
+                [base0, power0] = switch
+                    when term0 instanceof Pow then [term0.children.left, term0.children.right]
+                    else [term0, new terminals.Constant(1)]
+                found = false
+                for term1 in variable
+                    [base1, power1] = term1
+                    if base0.equals(base1)
+                        power2 = Add.canonical(power0, power1)
+                        # don't collect terms if we can't simplify away the addition
+                        found = not (power2 instanceof Add)
+                        if found
+                            term1[1] = power2
+                            break
+                variable.push([base0, power0]) unless found
+            return new terminals.Constant(0) if constant.evaluate() is 0
+            newTerms = (Pow.canonical(base, power) for [base, power] in variable when power.evaluate?() isnt 0)
+            newTerms.push(constant) unless constant.evaluate() is 1
+            return new terminals.Constant(1) unless newTerms.length > 0
+            return newTerms[0] unless newTerms.length > 1
+            return new Mul(newTerms.sort(compare)...)
+
+        # Multiply terms, respecting canonicalization rules
+        #
+        # @param terms... [Array<Object>] A list of expressions, in canonical form, to be multiplied
+        # @return [Object] Result of multiplication
+        # @note As a result of the canonicalization process, the return value is not necessarily a Mul node
+        @canonical: (terms...) ->
+            Add = require('operators/Add')
+            for term0, i in terms
+                throw new Error('invalid argument type') \
+                    unless term0 instanceof nodes.BasicNode
+                switch
+                    when term0 instanceof Add
+                        others = terms.slice()
+                        others.splice(i, 1)
+                        return Add.canonical((Mul.canonical(term1, others...) \
+                            for term1 in term0.getChildren())...)
+                    when term0 instanceof Mul
+                        others = terms.slice()
+                        others.splice(i, 1)
+                        return Mul.canonical(term0.getChildren()..., others...)
+            return Mul.collect(terms...)
 
         # Deep-copy this node.
         #
@@ -672,6 +731,6 @@ define [
                 return false
             return true
         
-        @approx: (a, b) -> a * b;
+        @approx: (a, b) -> a * b
 
     return Mul

@@ -28,6 +28,37 @@ define [
 
             [base, power] = parseArgs(base, power)
             super("**", base, power)
+        
+        # Exponentiation, respecting canonicalization rules
+        #
+        # @param base [Object] Base, in canonical form
+        # @param power [Object] Exponent, in canonical form
+        # @note As a result of the canonicalization process, the return value is not necessarily a Pow node
+        @canonical: (base, power) ->
+            throw new Error('base must be derived from BasicNode') \
+                unless base instanceof nodes.BasicNode
+            throw new Error('power must be derived from BasicNode') \
+                unless power instanceof nodes.BasicNode
+            Add = require('operators/Add')
+            Mul = require('operators/Mul')
+            if power instanceof terminals.Constant and power.evaluate() is 1
+                return base
+            if power instanceof Add
+                return Mul.canonical((Pow.canonical(base, term) \
+                    for term in power.getChildren())...)
+            if base instanceof Add and power instanceof terminals.Constant
+                n = power.floor()
+                if n > 0
+                    terms = (base for i in [0...n])
+                    remainder = power.add(new terminals.Constant(-n))
+                    return Mul.canonical(terms..., Pow.canonical(base, remainder))
+            if base instanceof Mul
+                return Mul.canonical((Pow.canonical(term, power) \
+                    for term in base.getChildren())...)
+            if base instanceof Pow
+                [base0, power0] = base.getChildren()
+                return Pow.canonical(base0, Mul.canonical(power0, power))
+            return new Pow(base, power)
 
         # Deep-copy this node.
         #

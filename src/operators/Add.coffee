@@ -64,6 +64,63 @@ define [
             args = parseArgs(args...)
             super("+", args)
 
+        # Collect like terms, respecting canonicalization rules
+        #
+        # @param terms... [Array<Object>] A list of expressions in canonical form to be collected
+        # @return [Object] Result of addition
+        @collect: (terms...) ->
+            Mul = require('operators/Mul')
+            constant = new terminals.Constant(0)
+            variable = []
+            for term0 in terms
+                if term0 instanceof terminals.Constant
+                    constant = constant.add(term0)
+                    continue
+                coeff0 = new terminals.Constant(1)
+                vars0  = []
+                if term0 instanceof Mul
+                    for term1 in term0.getChildren()
+                        if term1 instanceof terminals.Constant
+                            coeff0 = coeff0.mul(term1)
+                        else
+                            vars0.push(term1)
+                else
+                    vars0 = [term0]
+                vars0.sort(compare)
+                found = false
+                for term1 in variable
+                    [coeff1, vars1] = term1
+                    continue unless vars0.length is vars1.length
+                    found = true
+                    for i in [0...vars0.length]
+                        found = false unless vars0[i].equals(vars1[i])
+                        break unless found
+                    if found
+                        term1[0] = coeff1.add(coeff0)
+                        break
+                variable.push([coeff0, vars0]) unless found
+            newTerms = (Mul.canonical(coeff, vars...) \
+                for [coeff, vars] in variable when coeff.evaluate() isnt 0)
+            newTerms.push(constant) unless constant.evaluate() is 0
+            return new terminals.Constant(0) unless newTerms.length > 0
+            return newTerms[0] unless newTerms.length > 1
+            return new Add(newTerms.sort(compare)...)
+
+        # Add terms, respecting canonicalization rules
+        #
+        # @param terms... [Array<Object>] A list of expressions, in canonical form, to be added
+        # @return [Object] Result of addition
+        # @note As a result of the canonicalization process, the return value is not necessarily an Add node
+        @canonical: (terms...) ->
+            for term, i in terms
+                throw new Error('invalid argument type') \
+                    unless term instanceof nodes.BasicNode
+                if term instanceof Add
+                    others = terms.slice()
+                    others.splice(i, 1)
+                    return Add.canonical(term.getChildren()..., others...)
+            return Add.collect(terms...)
+
         # Deep-copy this node.
         #
         # @return [Add] A copy of this node.

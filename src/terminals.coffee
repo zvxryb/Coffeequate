@@ -56,6 +56,8 @@ define ["parse", "nodes", "prettyRender", "constants"], (parse, nodes, prettyRen
 				else
 					throw new Error("Unknown constant mode: #{@mode}.")
 
+		floor: -> @numerator // @denominator
+
 		# Evaluate the constant.
 		#
 		# @return [Number] A float representation of this constant.

@@ -114,5 +114,38 @@ suite.addBatch({
         "as LaTeX": function(expr) {
             assert.equal(expr.toLaTeX(), 'a-f+\\frac{b \\cdot c^{d}}{e}');
         }
+    },
+
+    "Canonical forms": {
+        "of integers": function() {
+            assert.equal(CQ("1").canonicalize().toString(), "1");
+        },
+        "of variables": function() {
+            assert.equal(CQ("a").canonicalize().toString(), "a");
+        },
+        "of addition": function() {
+            assert.equal(CQ("a+b").canonicalize().toString(), "a + b");
+        },
+        "of subtraction": function() {
+            assert.equal(CQ("a-b").canonicalize().toString(), "a - b");
+        },
+        "of multiplication": function() {
+            assert.equal(CQ("a*b").canonicalize().toString(), "a*b");
+        },
+        "of division": function() {
+            assert.equal(CQ("a/b").canonicalize().toString(), "a/b");
+        },
+        "of polynomial multiplication": function() {
+            assert.equal(CQ("(a + b)*(b + c)").canonicalize().toString(), "b**2 + a*b + a*c + b*c");
+            assert.equal(CQ("(a + b)*(a - b)").canonicalize().toString(), "a**2 - b**2");
+        },
+        "of polynomial exponentiation": function() {
+            var actual = CQ("(a + b)**(7/3)").canonicalize().toString();
+            var expected = "2*a*b*(a + b) ** (1/3) + a**2*(a + b) ** (1/3) + b**2*(a + b) ** (1/3)";
+            assert.equal(actual, expected);
+        },
+        "equality test": function() {
+            assert.isTrue(CQ("((-(b))**(1/3))/((-(a))**(1/3))").equals(CQ("(b/a)**(1/3)")));
+        }
     }
 }).export(module);

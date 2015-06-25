@@ -57,6 +57,9 @@ define ->
         approx: ->
             f = @constructor.approx
             return @getChildren().map((c) -> c.approx()).reduce((a, b) -> f(a, b))
+        
+        canonicalize: ->
+            @constructor.canonical?((c.canonicalize() for c in @getChildren())...) ? this
 
     # A node with any number of children.
     class RoseNode extends BasicNode

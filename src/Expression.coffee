@@ -7,19 +7,26 @@ define ["parse", "nodes"], (parse, nodes) ->
 
         # Make a new Expression.
         #
+        # @param expr [BasicNode] A BasicNode which represents this Expression
+        # @return [Expression]
+        constructor: (@expr) ->
+
+        # Parse an expression
+        #
         # @param val [String, Expression, BasicNode, Terminal] A string representation of an expression to parse or a node/terminal/expression to convert into an Expression.
         # @return [Expression]
-        constructor: (val) ->
+        @parse: (val) ->
             if val instanceof String or typeof val == "string"
                 # The string we pass in is just a representation to parse.
-                @expr = parse.stringToExpression(val)
-                if @expr.simplify?
-                    @expr = @expr.simplify()
+                expr = parse.stringToExpression(val)
+                if expr.simplify?
+                    expr = expr.simplify()
             else if val.copy?
                 @expr = val.copy().simplify()
             else
                 console.log("Received argument: ", val)
                 throw new Error("Unknown argument: `#{val}'.")
+            return new Expression(expr)
 
         # Convert this Expression to a string.
         #
@@ -162,10 +169,12 @@ define ["parse", "nodes"], (parse, nodes) ->
             return undefined unless other instanceof Expression
 
             # convert to canonical form
-            lhs = @expr.expandAndSimplify(equivalencies)
-            rhs = other.expr.expandAndSimplify(equivalencies)
+            lhs = @expr.canonicalize()
+            rhs = other.expr.canonicalize()
 
             return lhs.equals(rhs)
+
+        canonicalize: -> new Expression(@expr.canonicalize())
 
         # Get the numerical solution of the Expression
         #
