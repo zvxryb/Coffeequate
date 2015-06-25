@@ -125,15 +125,27 @@ suite.addBatch({
         },
         "of addition": function() {
             assert.equal(CQ("a+b").canonicalize().toString(), "a + b");
+            assert.equal(CQ("a+a+b").canonicalize().toString(), "b + 2*a");
         },
         "of subtraction": function() {
             assert.equal(CQ("a-b").canonicalize().toString(), "a - b");
+            assert.equal(CQ("a-a+b").canonicalize().toString(), "b");
         },
         "of multiplication": function() {
             assert.equal(CQ("a*b").canonicalize().toString(), "a*b");
+            assert.equal(CQ("a*(b+c)").canonicalize().toString(), "a*b + a*c");
         },
         "of division": function() {
             assert.equal(CQ("a/b").canonicalize().toString(), "a/b");
+            assert.equal(CQ("a/(b+c)").canonicalize().toString(), "a/(b + c)");
+            assert.equal(CQ("a/(b*c)").canonicalize().toString(), "a/b/c");
+        },
+        "of exponentiation": function() {
+            assert.equal(CQ("a**b").canonicalize().toString(), "a**b");
+            assert.equal(CQ("(a*b)**c").canonicalize().toString(), "a**c*b**c");
+            assert.equal(CQ("(a*b)**2").canonicalize().toString(), "a**2*b**2");
+            assert.equal(CQ("(a**b)**c").canonicalize().toString(), "a**(b*c)");
+            assert.equal(CQ("a**(b+c)").canonicalize().toString(), "a**b*a**c");
         },
         "of polynomial multiplication": function() {
             assert.equal(CQ("(a + b)*(b + c)").canonicalize().toString(), "b**2 + a*b + a*c + b*c");
